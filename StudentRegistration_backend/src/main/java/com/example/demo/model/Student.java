@@ -13,9 +13,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Student {
-	@Id
+    @Id
     private String username;
-	private String password;
+    private String password;
     private String name;
     private String phone;
     private String email;
