@@ -1,8 +1,6 @@
 package com.example.demo.service;
 
 import java.util.Optional;
-//import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +14,13 @@ public class StudentService {
     private StudentRepository studentRepository;
 
     public Student getStudentByUsername(String username) {
-        return studentRepository.findByUsername(username).orElse(null);
+    	return studentRepository.findById(username).orElse(null);
     }
 
     public Student registerStudent(Student student) {
         if (studentRepository.findById(student.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists!");
         }
-        
         return studentRepository.save(student);
     }
 
@@ -32,7 +29,7 @@ public class StudentService {
     }
 
     public Student updateStudentDetailsByUserName(String username, Student student) {
-        Optional<Student> existingStudentOpt = studentRepository.findByUsername(username);
+        Optional<Student> existingStudentOpt = studentRepository.findById(username);
         if (existingStudentOpt.isPresent()) {
             Student existingStudent = existingStudentOpt.get();
             existingStudent.setName(student.getName());
