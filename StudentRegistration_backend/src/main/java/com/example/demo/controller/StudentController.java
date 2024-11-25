@@ -23,11 +23,15 @@ public class StudentController {
     @Autowired
     private StudentService studentService;
 
-    @GetMapping("/my-profile/{userName}")
-    public Student getStudentByUserName(@PathVariable("userName") String userName) {
-        return studentService.getStudentByUsername(userName);
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody Student student) {
+    	Student existingStudent = studentService.getStudentByUsername(student.getUsername());
+    	if (existingStudent == null || !existingStudent.getPassword().equals(student.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username!");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body("Login Successful");
     }
-    
+
     @PostMapping("/new-register")
     public ResponseEntity<String> addStudentDetails(@RequestBody Student student) {
         try {
@@ -35,30 +39,27 @@ public class StudentController {
             return ResponseEntity.status(HttpStatus.CREATED).body("Registration successful!");
         } 
         catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists!");
         } 
         catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred during registration.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred during registration.");
         }
+    }
+    
+    @GetMapping("/my-profile/{userName}")
+    public Student getStudentByUserName(@PathVariable("userName") String userName) {
+    	return studentService.getStudentByUsername(userName);
     }
     
     @PutMapping("/edit-details/{username}")
     public ResponseEntity<Student> updateStudentDetailsByUserName(@PathVariable("username") String username, @RequestBody Student student) {
         Student updatedStudent = studentService.updateStudentDetailsByUserName(username, student);
         if (updatedStudent != null) {
-            return ResponseEntity.ok(updatedStudent);
+            return ResponseEntity.status(HttpStatus.CREATED).body(updatedStudent);
         } 
         else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
     }
 
-    @PostMapping("/login")
-    public String login(@RequestBody Student student) {
-        Student existingStudent = studentService.getStudentByUsername(student.getUsername());
-        if (existingStudent != null && existingStudent.getPassword().equals(student.getPassword())) {
-            return "Login Successful";
-        }
-        return "Invalid username or password";
-    }
 }
