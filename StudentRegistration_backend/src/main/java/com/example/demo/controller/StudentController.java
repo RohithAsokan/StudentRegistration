@@ -1,65 +1,69 @@
-package com.example.demo.controller;
+package com.example.demo.service;
+
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import com.example.demo.model.Student;
-import com.example.demo.service.StudentService;
+import com.example.demo.repository.StudentRepository;
+import com.example.demo.service.exception.StudentAlreadyExistsException;
+import com.example.demo.service.exception.StudentNotFoundException;
 
-@RestController
-@RequestMapping("/student-registration")
-@CrossOrigin(origins = "http://localhost:3000")
-public class StudentController {
+
+@Service
+public class StudentService {
 
     @Autowired
-    private StudentService studentService;
+    private StudentRepository studentRepository;
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Student student) {
-    	Student existingStudent = studentService.getStudentByUsername(student.getUsername());
-    	if (existingStudent == null || !existingStudent.getPassword().equals(student.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username!");
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body("Login Successful");
+    public boolean isUsernameAvailable(String username) {
+        Student student = studentRepository.findByUsername(username);
+        return student == null;
     }
 
-    @PostMapping("/new-register")
-    public ResponseEntity<String> addStudentDetails(@RequestBody Student student) {
-        try {
-            studentService.registerStudent(student);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Registration successful!");
-        } 
-        catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists!");
-        } 
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred during registration.");
+    public String login(String username, String password) throws StudentNotFoundException {
+        Student existingStudent = studentRepository.findByUsername(username);
+        if (existingStudent == null || !existingStudent.getPassword().equals(password)) {
+            throw new StudentNotFoundException("Invalid username or password!");
         }
+        return existingStudent.getId();
     }
-    
-    @GetMapping("/my-profile/{userName}")
-    public Student getStudentByUserName(@PathVariable("userName") String userName) {
-    	return studentService.getStudentByUsername(userName);
+
+    public void registerStudent(Student student) throws StudentAlreadyExistsException {
+        if (!isUsernameAvailable(student.getUsername())) {
+            throw new StudentAlreadyExistsException("Username already exists!");
+        }
+        studentRepository.save(student);
     }
-    
-    @PutMapping("/edit-details/{username}")
-    public ResponseEntity<Student> updateStudentDetailsByUserName(@PathVariable("username") String username, @RequestBody Student student) {
-        Student updatedStudent = studentService.updateStudentDetailsByUserName(username, student);
-        if (updatedStudent != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(updatedStudent);
+
+    public Student getStudentById(String id) throws StudentNotFoundException {
+        Optional<Student> optionalStudent = studentRepository.findById(id);
+        if (optionalStudent.isPresent()) {
+            return optionalStudent.get();
         } 
         else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            throw new StudentNotFoundException("Student not found!");
         }
     }
 
+    public Student updateStudentDetailsByUserId(String userId, Student updatedStudent) throws StudentNotFoundException {
+        Optional<Student> optionalStudent = studentRepository.findById(userId);
+        if (optionalStudent.isPresent()) {
+            Student existingStudent = optionalStudent.get();
+            if (!existingStudent.getUsername().equals(updatedStudent.getUsername()) && !isUsernameAvailable(updatedStudent.getUsername())) {
+                throw new IllegalArgumentException("Username already exists!");
+            }
+            existingStudent.setUsername(updatedStudent.getUsername());
+            existingStudent.setPassword(updatedStudent.getPassword());
+            existingStudent.setName(updatedStudent.getName());
+            existingStudent.setPhone(updatedStudent.getPhone());
+            existingStudent.setEmail(updatedStudent.getEmail());
+
+            return studentRepository.save(existingStudent);
+        } 
+        else {
+            throw new StudentNotFoundException("Student not found!");
+        }
+    }
 }
