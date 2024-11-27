@@ -16,7 +16,7 @@ import com.example.demo.service.StudentService;
 
 @RestController
 @RequestMapping("/student-registration")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3001")
 public class StudentController {
 
     @Autowired
@@ -43,7 +43,7 @@ public class StudentController {
     }
 
     @GetMapping("/check-username")
-    public boolean checkUsernameAvailability(@RequestParam String username, String userId) {
+    public boolean checkUsernameAvailability(@RequestParam String username,  String userId) {
         return studentService.isUsernameAvailable(username, userId);
     }
 }
