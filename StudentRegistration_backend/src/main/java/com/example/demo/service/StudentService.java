@@ -1,8 +1,12 @@
 package com.example.demo.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.example.demo.model.Course;
 import com.example.demo.model.Student;
 import com.example.demo.repository.StudentRepository;
 
@@ -55,5 +59,36 @@ public class StudentService {
             return studentRepository.save(existingStudent);
         }
         return null; 
+    }
+    
+    public String enrollCourse(String userId, Course course) {
+        Optional<Student> studentOpt = studentRepository.findById(userId);
+        if (studentOpt.isPresent()) {
+            Student student = studentOpt.get();
+            List<Course> enrolledCourses = student.getEnrolledCourses();
+            if (enrolledCourses == null) {
+                enrolledCourses = new ArrayList<>();
+                student.setEnrolledCourses(enrolledCourses);
+            }
+            for(Course enrolledCourse : enrolledCourses) {
+            	if(enrolledCourse.getCourseId().equals(course.getCourseId())) {
+            		return "Course already enrolled";
+            	}
+            }
+            enrolledCourses.add(course);
+            studentRepository.save(student);
+            return "Successfully enrolled";
+        }
+        return "Error occured";
+    }
+    
+    public List<Course> getEnrolledCourses(String userId) {
+        Optional<Student> optionalStudent = studentRepository.findById(userId);
+        if (optionalStudent.isPresent()) {
+        	Student student = optionalStudent.get();
+        	List<Course> enrolledCourses = student.getEnrolledCourses();
+        	if(enrolledCourses != null) return enrolledCourses;
+        }
+        return new ArrayList<>();
     }
 }
