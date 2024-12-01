@@ -1,5 +1,7 @@
 package com.example.demo.model;
 
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,20 +14,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Student {
-    @Id
-    private String id;
-    private String username;
-    private String password;
+	@Id
+	private String id;
+	private String username;
+	private String password;
     private String name;
     private String phone;
     private String email;
-
-        public String getId() {
-  	        return id;
-        }
-        public void setId(String id) {
-    	        this.id = id;
-        }
+    private List<Course> enrolledCourses;
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
 	public String getUsername() {
 		return username;
 	}
@@ -55,5 +57,11 @@ public class Student {
 	}
 	public void setEmail(String email) {
 		this.email = email;
-	}    
+	}
+	public List<Course> getEnrolledCourses() {
+		return enrolledCourses;
+	}
+	public void setEnrolledCourses(List<Course> enrolledCourses) {
+		this.enrolledCourses = enrolledCourses;
+	}   
 }
